@@ -1,1 +1,1 @@
-# course_enrollmement_managment_api
+# course_enrollment_managment_api
