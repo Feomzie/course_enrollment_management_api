@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.schemas.users_schema import UserCreate
 from app.models.users import users
 
-router = APIRouter()
+router = APIRouter(tags=["Users"])
 
 @router.post("/users")
 def create_user(user_data: UserCreate):
@@ -32,4 +32,4 @@ def get_user(id: int):
     for user in users:
         if user["id"] == id:
             return user
-        return {"error": "User not found"}
+    raise HTTPException(status_code=404, detail="User not found")
