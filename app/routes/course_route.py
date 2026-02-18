@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.schemas.courses_schema import CourseCreate, CourseUpdate
+from app.schemas.enrollments_schema import AdminCheck
 from app.models.courses import courses
 
-router = APIRouter()
+router = APIRouter(tags=["Courses"])
 
 @router.get("/courses")
 def get_all_course():
@@ -14,19 +15,19 @@ def get_course(id: int):
     for course in courses:
         if course["id"] == id:
             return course
-        raise HTTPException(status_code=404, detail="Course not found.") 
+    raise HTTPException(status_code=404, detail="Course not found.") 
 
     
 
 @router.post("/courses")
-def create_course(course_data: CourseCreate):
+def create_course(course_data: CourseCreate, admin_data:  AdminCheck = Depends ()):
     current_course_id = courses[-1]["id"] + 1
 
-    if course_data.role != "admin":
+    if admin_data.role != "admin":
         raise HTTPException(status_code=401, detail="You are not an admin! Get out!") 
     for course in courses:
         if course["code"] == course_data.code:
-            raise HTTPException(status_code=400, detail="Course code already exists.") 
+            raise HTTPException(status_code=400, detail="Course code already.") 
 
 
     new_course = {
@@ -43,12 +44,12 @@ def create_course(course_data: CourseCreate):
     }
 
 
-@router.put("/courses/{id}")
-def update_course(id: int, course_data: CourseUpdate):
-    if course_data.role != "admin":
+@router.put("/courses/{course_id}")
+def update_course(course_id: int, course_data: CourseUpdate, admin_data:  AdminCheck = Depends ()):
+    if admin_data.role != "admin":
         raise HTTPException(status_code=401, detail="You are not an admin! Get out!") 
     for course in courses:
-        if course["id"] == id:
+        if course["id"] == course_id:
             if course_data.title is not None:
                 course["title"] = course_data.title
             if course_data.code is not None:
@@ -58,13 +59,13 @@ def update_course(id: int, course_data: CourseUpdate):
                 "updated_course": course
             }
 
-        raise HTTPException(status_code=404, detail="Course not found.") 
+    raise HTTPException(status_code=404, detail="Course not found.") 
 
 
 @router.delete("/courses/{id}")
 def delete_course(id: int):
     for course in courses:
         if course["id"] == id:
-            course.remove(course)
+            courses.remove(course)
             return {"message": "Course removed successfully"}
-        raise HTTPException(status_code=404, detail="Course not found.") 
+    raise HTTPException(status_code=404, detail="Course not found.") 
